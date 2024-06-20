@@ -29,6 +29,10 @@ def run(model, data, name=None):
     logger.info(f"{name}\n")
     start_epoch = 0
     best = 0
+    logger.info("warm-up, learning_rate = 0.0001")
+    best, start_epoch = Training.train_until(
+        model, data, logger, 26, optimizers[0.0001], best
+    )
     logger.info("learning_rate = 0.001")
     best = Training.train_epoch_range(
         model, data, logger, start_epoch, 30, optimizers[0.001], best

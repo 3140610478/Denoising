@@ -84,10 +84,10 @@ def _preprocess(files: list[str], output_path: str, patchify: bool = False, patc
                 tmp = resize(img, shape)
                 for h in range(0, shape[0]-patch_size+1, stride):
                     for w in range(0, shape[1]-patch_size+1, stride):
-                        imgs.append(tmp[:, h:h+patch_size, w:w+patch_size].cpu())
+                        imgs.append(
+                            tmp[:, h:h+patch_size, w:w+patch_size].cpu())
         else:
             imgs.append(img.cpu())
-            
 
     with open(output_path, "wb") as f:
         pickle.dump(imgs, f)
@@ -107,8 +107,7 @@ class _REF_Dataset(Dataset):
 
     def __getitem__(self, index):
         target = self.imgs[index].clone().to(self.device)
-        noise = torch.empty_like(target)
-        torch.nn.init.normal_(noise, 0., self.std)
+        noise = torch.randn(target.shape, device=self.device) * self.std
         input = target + noise
         input = 1 - F.relu(1 - F.relu(input))
         if self.transform is not None:
