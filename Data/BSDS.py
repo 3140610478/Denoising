@@ -63,6 +63,7 @@ test_path = join_path(preprocessed_folder, "./test.pickle")
 train = os.listdir(original_folder)
 train = [i for i in train if i.endswith(".jpg")]
 train = [join_path(original_folder, f"./{i}") for i in train]
+random.seed(config.seed)
 random.shuffle(train)
 split_point = int(len(train) * 0.9), int(len(train) * 0.95)
 train, val, test = (

@@ -38,7 +38,4 @@ class DnCNN(nn.Sequential):
 if __name__ == "__main__":
     dncnn = DnCNN(3, config.layers).to("cuda")
     print(str(dncnn))
-    a = torch.zeros((16, 3, 120, 90)).to("cuda")
-    while True:
-        print(a.shape, dncnn.forward(a).shape)
     pass

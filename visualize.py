@@ -12,7 +12,7 @@ if base_folder not in sys.path:
 if True:
     import config
     from Networks.DnCNN import DnCNN
-    from Data import BSDS
+    from Data import BSDS, REF
 
 
 def read_training_log(filename):
@@ -140,6 +140,13 @@ def plot_contents(fig: go.Figure, name: str, contents: dict[str, dict[str, list]
         row=1,
         col=3,
     )
+    psnr_max = max(psnr["train"]+psnr["val"]+psnr["test"])
+    fig.update_xaxes(title_text="epochs", row=1, col=1)
+    fig.update_xaxes(title_text="epochs", row=1, col=2)
+    fig.update_xaxes(title_text="epochs", row=1, col=3)
+    fig.update_yaxes(title_text="loss", range=(0, 0.5), row=1, col=1)
+    fig.update_yaxes(title_text="psnr", range=(0, psnr_max+1), row=1, col=2)
+    fig.update_yaxes(title_text="ssim", range=(0, 1.1), row=1, col=3)
     pass
 
 
@@ -147,6 +154,20 @@ if __name__ == '__main__':
     folder = base_folder
     if not os.path.exists(folder):
         os.mkdir(folder)
+    model, dataset = DnCNN, REF
+    fig = make_subplots(
+        rows=1, cols=3, subplot_titles=("[loss]", "[psnr]", "[ssim]"),
+        horizontal_spacing=0.05,
+    )
+    colors = colorset.Plotly
+    name = name = f"{model.__name__}_on_{dataset.__name__.rsplit('.')[-1]}"
+    log = read_training_log(f"./{name}.log")
+
+    plot_contents(fig, f"{model.__name__}", log, colors)
+
+    plot(fig, filename=os.path.abspath(
+        os.path.join(base_folder, f"./{name}.html")))
+    
     model, dataset = DnCNN, BSDS
     fig = make_subplots(
         rows=1, cols=3, subplot_titles=("[loss]", "[psnr]", "[ssim]"),
@@ -158,12 +179,6 @@ if __name__ == '__main__':
 
     plot_contents(fig, f"{model.__name__}", log, colors)
 
-    fig.update_xaxes(title_text="epochs", row=1, col=1)
-    fig.update_xaxes(title_text="epochs", row=1, col=2)
-    fig.update_xaxes(title_text="epochs", row=1, col=3)
-    fig.update_yaxes(title_text="loss", row=1, col=1)
-    fig.update_yaxes(title_text="psnr", row=1, col=2)
-    fig.update_yaxes(title_text="ssim", row=1, col=3)
     plot(fig, filename=os.path.abspath(
         os.path.join(base_folder, f"./{name}.html")))
     pass

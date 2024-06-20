@@ -14,7 +14,7 @@ if base_folder not in sys.path:
     sys.path.append(base_folder)
 if True:
     from Networks.DnCNN import DnCNN as DnCNN
-    from Data import BSDS
+    from Data import REF, BSDS
     import config
 
 
@@ -22,15 +22,15 @@ if True:
 def predict(model, data, eps=1e-8):
     data_loader = data.test_loader
     output_folder = os.path.abspath(os.path.join(
-        base_folder, "./Data/predicted",
+        base_folder, f"./Data/predicted/{data.__name__.rsplit('.')[-1]}",
     ))
     os.makedirs(output_folder, exist_ok=True)
     for i, sample in enumerate(tqdm(data_loader)):
         x, y = sample
         x, y = x.to(config.device), y.to(config.device)
 
-        h = model(x) + x
-        h = 1 - F.relu(1 - F.relu(h))
+        h = x - model(x)
+        h, y, = torch.clamp(h, 0, 1), torch.clamp(y, 0, 1)
         x, y, h = x.squeeze(0), y.squeeze(0), h.squeeze(0)
 
         x, y, h = (to_pil_image(i.squeeze(0)) for i in (x, y, h))
@@ -47,8 +47,29 @@ def predict(model, data, eps=1e-8):
 
 
 if __name__ == "__main__":
-    checkpoint = torch.load(config.save_path)
-    dncnn = DnCNN(3, config.layers)
-    dncnn.load_state_dict(checkpoint["state_dict"])
-    predict(dncnn.to(config.device), BSDS)
+    data = REF
+    model = DnCNN(data.in_channels, config.layers)
+    name = f"{model.__class__.__name__}_on_{data.__name__.rsplit('.')[-1]}"
+    checkpoint = torch.load(
+        os.path.abspath(
+            os.path.join(
+                config.save_folder, f"./{name}.tar",
+            ),
+        ),
+    )
+    model.load_state_dict(checkpoint["state_dict"])
+    predict(model.to(config.device), REF)
+    
+    data = BSDS
+    model = DnCNN(data.in_channels, config.layers)
+    name = f"{model.__class__.__name__}_on_{data.__name__.rsplit('.')[-1]}"
+    checkpoint = torch.load(
+        os.path.abspath(
+            os.path.join(
+                config.save_folder, f"./{name}.tar",
+            ),
+        ),
+    )
+    model.load_state_dict(checkpoint["state_dict"])
+    predict(model.to(config.device), BSDS)
     pass

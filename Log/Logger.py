@@ -11,7 +11,7 @@ if not os.path.exists(logger_path):
 
 
 def getLogger(name: str) -> logging.Logger:
-    logger = logging.getLogger(f"[{name}] logger in ResNet")
+    logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     terminal_handler = logging.StreamHandler(sys.stderr)
     terminal_handler.setLevel(logging.INFO)
