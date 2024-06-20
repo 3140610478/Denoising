@@ -7,7 +7,7 @@ from tqdm import tqdm
 import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
-from torchvision.transforms.functional import to_tensor
+from torchvision.transforms.functional import to_tensor, resize
 from torchvision.transforms import RandomCrop
 from PIL import Image
 
@@ -25,13 +25,12 @@ if True:
 #     SuperResolution/Data/:
 #         original:
 #             bsds500:
-#                 trainval:
-#                     xxx.jpg
-#                     xxx.jpg
-#                     .
-#                     .
-#                     .
-#                     xxx.jpg
+#                 xxx.jpg
+#                 xxx.jpg
+#                 .
+#                 .
+#                 .
+#                 xxx.jpg
 #             bsds500.zip
 #         preprocessed:
 #             bsds500:
@@ -73,14 +72,24 @@ train, val, test = (
 )
 
 
-def _preprocess(files: list[str], output_path: str):
+def _preprocess(files: list[str], output_path: str, patchify: bool = False, patch_size: int = 160, stride: int = 40):
+    scales = torch.tensor((1, 0.9, 0.8, 0.7)).reshape(4, 1)
     imgs = []
 
     print(f"Processing {output_path}")
     for file in tqdm(files):
-        img = to_tensor(Image.open(file))
+        img = to_tensor(Image.open(file)).to(config.device)
         img.requires_grad_(False)
-        imgs.append(img.cpu())
+        if patchify:
+            shapes = (torch.tensor(img.shape[-2:]) * scales).int()
+            for shape in shapes:
+                tmp = resize(img, shape)
+                for h in range(0, shape[0]-patch_size+1, stride):
+                    for w in range(0, shape[1]-patch_size+1, stride):
+                        imgs.append(
+                            tmp[:, h:h+patch_size, w:w+patch_size].cpu())
+        else:
+            imgs.append(img.cpu())
 
     with open(output_path, "wb") as f:
         pickle.dump(imgs, f)
@@ -119,7 +128,7 @@ try:
     val_set = _BSDS_Dataset(val_path)
     test_set = _BSDS_Dataset(test_path)
 except:
-    _preprocess(train, train_path)
+    _preprocess(train, train_path, patchify=True)
     _preprocess(val, val_path)
     _preprocess(test, test_path)
     train_set = _BSDS_Dataset(train_path, transform=train_transform)

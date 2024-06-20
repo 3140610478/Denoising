@@ -65,9 +65,9 @@ def get_optimizers(
 def train_epoch(
     model: torch.nn.Module,
     data,
+    optimizer: torch.optim.Optimizer,
     logger: Logger,
     epoch: int,
-    optimizer: torch.optim.Optimizer,
     best: float = 0,
 ) -> tuple[float]:
     message = \
@@ -126,7 +126,11 @@ def train_epoch(
                 "best": best,
                 "state_dict": model.state_dict(),
             },
-            config.save_path,
+            os.path.abspath(
+                os.path.join(
+                    config.save_folder, f"./{logger.name}.tar",
+                ),
+            ),
         )
 
     best = max(best, float(val_psnr))
@@ -140,23 +144,23 @@ def train_epoch(
 def train_epoch_range(
     model: torch.nn.Module,
     data,
+    optimizer: torch.optim.Optimizer,
     logger: Logger,
     start: int,
     stop: int,
-    optimizer: torch.optim.Optimizer,
     best=0,
 ) -> None:
     for epoch in trange(start, stop):
-        best = train_epoch(model, data, logger, epoch, optimizer, best)[-1]
+        best = train_epoch(model, data, optimizer, logger, epoch, best)[-1]
     return best
 
 
 def train_until(
     model: torch.nn.Module,
     data,
+    optimizer: torch.optim.Optimizer,
     logger: Logger,
     threshold: float,
-    optimizer: torch.optim.Optimizer,
     best=0,
 ) -> tuple[float, int]:
     epoch = 0
@@ -164,7 +168,7 @@ def train_until(
         (0, 0, 0, 0, 0, 0, best)
     while train_psnr <= threshold or val_psnr <= threshold:
         train_loss, val_loss, train_psnr, val_psnr, train_ssim, val_ssim, best = \
-            train_epoch(model, data, logger, epoch, optimizer, best)
+            train_epoch(model, data, optimizer, logger, epoch, best)
         epoch += 1
     return best, epoch
 
@@ -177,7 +181,13 @@ def test(
 ) -> None:
     logger.info("\nTesting: ")
 
-    checkpoint = torch.load(config.save_path)
+    checkpoint = torch.load(
+        os.path.abspath(
+            os.path.join(
+                config.save_folder, f"./{logger.name}.tar",
+            ),
+        ),
+    )
     model.load_state_dict(checkpoint["state_dict"])
 
     message = "[loss]\ttest:{:.8f}\n[psnr]\ttest:{:.8f}\n[ssim]\ttest:{:.8f}\n"

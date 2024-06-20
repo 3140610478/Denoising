@@ -13,7 +13,7 @@ std = 25
 layers = 20
 
 base_folder = os.path.dirname(os.path.abspath(__file__))
-save_path = os.path.abspath(os.path.join(
-    base_folder, "./Networks/save/model.tar"
+save_folder = os.path.abspath(os.path.join(
+    base_folder, "./Networks/save"
 ))
-os.makedirs(os.path.dirname(save_path), exist_ok=True)
+os.makedirs(save_folder, exist_ok=True)

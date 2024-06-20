@@ -31,21 +31,17 @@ def run(model, data, name=None):
     best = 0
     logger.info("warm-up, learning_rate = 0.0001")
     best, start_epoch = Training.train_until(
-        model, data, logger, 26, optimizers[0.0001], best
+        model, data, optimizers[0.0001], logger, 26, best
     )
     logger.info("learning_rate = 0.001")
     best = Training.train_epoch_range(
-        model, data, logger, start_epoch, 30, optimizers[0.001], best
+        model, data, optimizers[0.001], logger, start_epoch, 30, best
     )
     logger.info("learning_rate = 0.0001")
     best = Training.train_epoch_range(
-        model, data, logger, 30, 50, optimizers[0.0001], best
+        model, data, optimizers[0.0001], logger, 30, 50, best
     )
     Training.test(model, data, logger)
-    os.rename(
-        config.save_path,
-        os.path.abspath(os.path.join(os.path.dirname(config.save_path), f"./{name}.tar"))
-    )
 
 
 if __name__ == "__main__":
